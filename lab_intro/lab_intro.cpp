@@ -16,22 +16,21 @@ using namespace cs225;
  * @return The grayscale image.
  */
 PNG grayscale(PNG image) {
-  /// This function is already written for you so you can see how to
-  /// interact with our PNG class.
-  for (unsigned x = 0; x < image.width(); x++) {
-    for (unsigned y = 0; y < image.height(); y++) {
-      HSLAPixel & pixel = image.getPixel(x, y);
+    /// This function is already written for you so you can see how to
+    /// interact with our PNG class.
+    for (unsigned x = 0; x < image.width(); x++) {
+        for (unsigned y = 0; y < image.height(); y++) {
+            HSLAPixel &pixel = image.getPixel(x, y);
 
-      // `pixel` is a pointer to the memory stored inside of the PNG `image`,
-      // which means you're changing the image directly.  No need to `set`
-      // the pixel since you're directly changing the memory of the image.
-      pixel.s = 0;
+            // `pixel` is a pointer to the memory stored inside of the PNG `image`,
+            // which means you're changing the image directly.  No need to `set`
+            // the pixel since you're directly changing the memory of the image.
+            pixel.s = 0;
+        }
     }
-  }
 
-  return image;
+    return image;
 }
-
 
 
 /**
@@ -55,11 +54,25 @@ PNG grayscale(PNG image) {
  * @return The image with a spotlight.
  */
 PNG createSpotlight(PNG image, int centerX, int centerY) {
-
-  return image;
-  
+    for (unsigned i = 0; i < image.width(); i++) {
+        for (unsigned j = 0; j < image.height(); j++) {
+            HSLAPixel &pixel = image.getPixel(i, j);
+            double distance = calc_distance(i, j, centerX, centerY);
+            if (distance > 160) {
+                distance = 160;
+            }
+            pixel.l = pixel.l * (1.0 - distance * decr_ratio);
+        }
+    }
+    return image;
 }
- 
+
+double calc_distance(unsigned x, unsigned y, int centerX, int centerY) {
+    double x_dist = (int)x - centerX, y_dist = (int)y - centerY;
+    return std::sqrt(x_dist * x_dist + y_dist * y_dist);
+
+}
+
 
 /**
  * Returns a image transformed to Illini colors.
@@ -72,10 +85,37 @@ PNG createSpotlight(PNG image, int centerX, int centerY) {
  * @return The illinify'd image.
 **/
 PNG illinify(PNG image) {
-
-  return image;
+    for (unsigned i = 0; i < image.width(); i++) {
+        for (unsigned j = 0; j < image.height(); j++) {
+            HSLAPixel &pixel = image.getPixel(i, j);
+            if (is_closer_to_orange(pixel.h)) {
+                pixel.h = illini_orange;
+            } else {
+                pixel.h = illini_blue;
+            }
+        }
+    }
+    return image;
 }
- 
+
+bool is_closer_to_orange(double h) {
+    double dis_orange = get_min_distance_in_circle(h, illini_orange);
+    double dis_blue = get_min_distance_in_circle(h, illini_blue);
+    return dis_orange < dis_blue;
+}
+
+double get_min_distance_in_circle(double loc1, double loc2) {
+    double dis1 = loc1 - loc2;
+    if (dis1 < 0) {
+        dis1 += max_range;
+    }
+    double dis2 = loc2 - loc1;
+    if (dis2 < 0) {
+        dis2 += max_range;
+    }
+    return std::min(dis1, dis2);
+}
+
 
 /**
 * Returns an immge that has been watermarked by another image.
@@ -90,6 +130,19 @@ PNG illinify(PNG image) {
 * @return The watermarked image.
 */
 PNG watermark(PNG firstImage, PNG secondImage) {
-
-  return firstImage;
+    unsigned min_height = std::min(firstImage.height(), secondImage.height());
+    unsigned min_width = std::min(firstImage.width(), secondImage.width());
+    for (unsigned i = 0; i < min_width; i++) {
+        for (unsigned j = 0; j < min_height; j++) {
+            if (secondImage.getPixel(i, j).l != max_lumi) {
+                continue;
+            }
+            HSLAPixel &pixel = firstImage.getPixel(i, j);
+            pixel.l += incr_lumi;
+            if (pixel.l > max_lumi) {
+                pixel.l = max_lumi;
+            }
+        }
+    }
+    return firstImage;
 }

@@ -32,7 +32,7 @@ namespace cs225 {
   PNG::PNG() {
     width_ = 0;
     height_ = 0;
-    imageData_ = NULL;
+    imageData_ = nullptr;
   }
 
   PNG::PNG(unsigned int width, unsigned int height) {
@@ -42,7 +42,7 @@ namespace cs225 {
   }
 
   PNG::PNG(PNG const & other) {
-    imageData_ = NULL;
+    imageData_ = nullptr;
     _copy(other);
   }
 
